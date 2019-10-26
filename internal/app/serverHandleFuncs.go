@@ -559,6 +559,7 @@ func (s *server)CORSMiddleware (next http.Handler) http.Handler {
 			w.Header().Set("Access-Control-Allow-Methods", "POST,PUT,DELETE,GET")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type,X-Lol")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Set("Access-Control-Allow-Origin", s.clientUrl)
 			s.respond(w , r , http.StatusOK, nil)
 			return
 		}
