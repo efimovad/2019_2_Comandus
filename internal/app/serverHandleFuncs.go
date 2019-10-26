@@ -17,6 +17,7 @@ import (
 )
 
 func (s *server) HandleCreateUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", s.clientUrl)
 
