@@ -18,7 +18,6 @@ import (
 
 func (s *server) HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", s.clientUrl)
 
 	defer func() {
 		if err := r.Body.Close(); err != nil {
@@ -555,14 +554,14 @@ func (s *server) HandleCheckSecQuestion(w http.ResponseWriter, r *http.Request) 
 
 func (s *server)CORSMiddleware (next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodOptions{
 			w.Header().Set("Access-Control-Allow-Methods", "POST,PUT,DELETE,GET")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type,X-Lol")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Access-Control-Allow-Origin", s.clientUrl)
-			s.respond(w , r , http.StatusOK, nil)
-			return
-		}
+	if r.Method == http.MethodOptions{
+		s.respond(w , r , http.StatusOK, nil)
+		return
+	}
 		next.ServeHTTP(w, r)
 	})
 }
