@@ -2,6 +2,7 @@ package teststore
 
 import (
 	"fmt"
+	"github.com/DATA-DOG/go-sqlmock"
 	//"database/sql"
 	//"fmt"
 	"github.com/go-park-mail-ru/2019_2_Comandus/internal/model"
@@ -11,7 +12,6 @@ import (
 	//"net/http/httptest"
 	"reflect"
 	"testing"
-	"github.com/DATA-DOG/go-sqlmock"
 )
 
 func testUser(t *testing.T) *model.User {
@@ -47,7 +47,7 @@ func TestUserRepository_Create(t *testing.T) {
 	defer db.Close()
 
 	store := sqlstore.New(db)
-	repo := store.User()
+	//repo := store.User()
 
 	u := testUser(t)
 	if err := u.Validate(); err != nil {
@@ -58,13 +58,26 @@ func TestUserRepository_Create(t *testing.T) {
 		t.Fatal()
 	}
 
+
+	firstName := u.FirstName
+	secondName := u.SecondName
+	username := u.UserName
+	email := u.Email
+	encryptPassword := u.EncryptPassword
+	userType := u.UserType
+
 	//ok query
 	mock.
+		//ExpectExec(`INSERT INTO users\\(firstName, secondName, username, email, encryptPassword, userType)\\`).
 		ExpectExec(`INSERT INTO users`).
-		WithArgs(u.FirstName, u.SecondName, u.UserName, u.Email, u.EncryptPassword, u.UserType)
+		WithArgs(firstName, secondName, username, email, encryptPassword, userType).
+		WillReturnError(nil)
+		//WillReturnResult(sqlmock.NewResult(0,0))
 		//WillReturnError(nil)
 
-	err = repo.Create(u)
+	err = store.User().Create(u)
+
+	fmt.Println(u)
 	if err != nil {
 		t.Errorf("unexpected err: %s", err)
 		return
