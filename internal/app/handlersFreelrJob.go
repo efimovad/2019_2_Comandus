@@ -164,11 +164,11 @@ func (s *server) HandleEditFreelancer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if 	_, err = govalidator.ValidateStruct(freelancer); err != nil {
+	/*if 	_, err = govalidator.ValidateStruct(freelancer); err != nil {
 		err = errors.Wrapf(err, "HandleEditFreelancer<-ValidateStruct:")
 		s.error(w, r, http.StatusBadRequest, err)
 		return
-	}
+	}*/
 
 	err = s.store.Freelancer().Edit(freelancer)
 	if err != nil {
