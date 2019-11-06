@@ -30,11 +30,11 @@ func (s *server) HandleCreateJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if 	_, err = govalidator.ValidateStruct(job); err != nil {
+	/*if 	_, err = govalidator.ValidateStruct(job); err != nil {
 		err = errors.Wrapf(err, "HandleCreateJob<-ValidateStruct:")
 		s.error(w, r, http.StatusBadRequest, err)
 		return
-	}
+	}*/
 
 	user, err, codeStatus := s.GetUserFromRequest(r)
 	if err != nil {
