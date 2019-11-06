@@ -2,7 +2,7 @@ package apiserver
 
 import (
 	"encoding/json"
-	"github.com/asaskevich/govalidator"
+	//"github.com/asaskevich/govalidator"
 	"github.com/go-park-mail-ru/2019_2_Comandus/internal/model"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
