@@ -2,11 +2,13 @@ package apiserver
 
 import (
 	"database/sql"
-	"github.com/gorilla/sessions"
+	"github.com/go-park-mail-ru/2019_2_Comandus/internal/store/create"
+	"go.uber.org/zap"
+	"log"
 	"net/http"
+	"os"
 )
 
-// Зачем обертки над http.ResponseWriter , код можно и в нем засетить
 type responseWriter struct {
 	http.ResponseWriter
 	code int
@@ -17,33 +19,59 @@ func (w *responseWriter) WriteHeader(statusCode int) {
 	w.ResponseWriter.WriteHeader(statusCode)
 }
 
-func Start(config *Config) error {
-	/*db, err := newDB(config.DatabaseURL)
+func Start() error {
+	config := NewConfig()
+
+	port := os.Getenv("PORT")
+	if len(port) == 0 {
+		port = ":8080"
+	} else {
+		port = ":" + port
+	}
+	config.BindAddr = port
+
+	url :=  os.Getenv("DATABASE_URL")
+	if len(url) != 0 {
+		config.DatabaseURL = url
+	}
+
+	zapLogger, _ := zap.NewProduction()
+	defer func() {
+		if err := zapLogger.Sync(); err != nil {
+			log.Println("HEHEHEG",err)
+		}
+	}()
+	sugaredLogger := zapLogger.Sugar()
+
+	srv, err := NewServer(config, sugaredLogger)
 	if err != nil {
 		return err
 	}
 
-	defer db.Close()
-	store := store.New(db)*/
+	db, err := newDB(config.DatabaseURL)
+	if err != nil {
+		return err
+	}
 
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
 
-	sessionStore := sessions.NewCookieStore([]byte(config.SessionKey))
-	srv := newServer(sessionStore)
-	//err := srv.ConfigureStore()
-	//if err != nil {
-	//	return err
-	//}
+	srv.ConfigureServer(db)
 	return http.ListenAndServe(config.BindAddr, srv)
 }
+
 func newDB(dbURL string) (*sql.DB, error) {
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := db.Ping(); err != nil {
+	db.SetMaxOpenConns(20)
+	if err := create.CreateTables(db); err != nil {
 		return nil, err
 	}
-
 	return db, nil
 }

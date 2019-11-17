@@ -2,22 +2,38 @@ package model
 
 import (
 	"errors"
+	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
+	"github.com/microcosm-cc/bluemonday"
 	"golang.org/x/crypto/bcrypt"
-	"regexp"
 )
 
+const (
+	UserFreelancer = "freelancer"
+	UserCustomer   = "client"
+	)
+
 type User struct {
-	ID 				int `json:"id"`
-	FirstName 		string `json:"firstName"`
-	SecondName 		string `json:"secondName"`
-	UserName     	string `json:"username"`
-	Email 			string `json:"email"`
-	Password 		string `json:"-"`
-	EncryptPassword string `json:"-"`
-	Avatar bool `json:"-"`
+	ID 				int64 `json:"-" valid:"int, optional"`
+	FirstName 		string `json:"firstName" valid:"utfletter, required"`
+	SecondName 		string `json:"secondName" valid:"utfletter"`
+	UserName     	string `json:"username" valid:"alphanum"`
+	Email 			string `json:"email" valid:"email"`
+	Password		string `json:"password" valid:"length(6|100)"`
+	EncryptPassword string `json:"-" valid:"-"`
+	Avatar 			[]byte `json:"-" valid:"-"`
+	UserType 		string `json:"type" valid:"in(client|freelancer)"`
+	FreelancerId    int64  `json:"freelancerId" valid:"int, optional"`
+	HireManagerId   int64  `json:"hireManagerId" valid:"int, optional"`
+	CompanyId       int64  `json:"companyId" valid:"int, optional"`
 }
 
+
 func (u *User) BeforeCreate() error {
+	if len(u.UserType) == 0 || u.UserType != UserFreelancer && u.UserType != UserCustomer {
+		u.UserType = UserFreelancer
+	}
+
 	if len(u.Password) > 0 {
 		enc, err := EncryptString(u.Password)
 		if err != nil {
@@ -27,6 +43,18 @@ func (u *User) BeforeCreate() error {
 	}
 	u.Password = ""
 	return nil
+}
+
+func (u *User) SetUserType(userType string) error {
+	if userType == UserFreelancer || userType == UserCustomer {
+		u.UserType = userType
+		return nil
+	}
+	return errors.New("wrong user type")
+}
+
+func (u *User) IsManager() bool {
+	return u.UserType == UserCustomer
 }
 
 func (u *User) ComparePassword(password string) bool {
@@ -41,18 +69,25 @@ func EncryptString(s string) (string, error) {
 	return string(b), nil
 }
 
-type UserInput struct {
-	Name 		string `json:"firstName"`
-	Surname 	string `json:"secondName"`
-	Email   	string `json:"email"`
-	Password	string `json:"password"`
-	UserType 	string `json:"type"`
+func (u *User) Validate() error {
+	return validation.ValidateStruct(
+		u,
+		validation.Field(&u.Email, validation.Required, is.Email),
+		validation.Field(&u.Password, validation.Required, validation.Length(6, 100)),
+	)
 }
 
-func (u *UserInput) CheckEmail() error {
-	re := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-	if valid := re.MatchString(u.Email); valid == false {
-		return errors.New("invalid email")
+func requiredIf(cond bool) validation.RuleFunc {
+	return func(value interface{}) error {
+		if cond {
+			return validation.Validate(value, validation.Required)
+		}
+		return nil
 	}
-	return nil
+}
+
+func (u *User) Sanitize (sanitizer *bluemonday.Policy)  {
+	u.FirstName = sanitizer.Sanitize(u.FirstName)
+	u.SecondName = sanitizer.Sanitize(u.SecondName)
+	u.UserName = sanitizer.Sanitize(u.UserName)
 }
