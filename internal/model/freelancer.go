@@ -2,21 +2,19 @@ package model
 
 import (
 	"github.com/microcosm-cc/bluemonday"
-	"time"
 )
 
 type Freelancer struct {
-	ID                int64       `json:"id" valid:"int, optional"`
-	AccountId         int64       `json:"accountId" valid:"int, optional"`
-	RegistrationDate  time.Time `json:"registrationDate" valid:"-"`
+	ID                int64		`json:"id" valid:"int, optional"`
+	AccountId         int64		`json:"accountId" valid:"int, optional"`
 	Country           string    `json:"country" valid:"utfletter"`
 	City              string    `json:"city" valid:"utfletter"`
 	Address           string    `json:"address" valid:"-"`
 	Phone             string    `json:"phone" valid:"-"`
 	TagLine           string    `json:"tagline" valid:"-"`
 	Overview          string    `json:"overview" valid:"-"`
-	ExperienceLevelId int       `json:"experienceLevelId" valid:"in(1|2|3)"`
-	SpecialityId      int       `json:"specialityId,string" valid:"int"`
+	ExperienceLevelId int64		`json:"experienceLevelId" valid:"in(1|2|3)"`
+	SpecialityId      int64		`json:"specialityId,string" valid:"int"`
 }
 
 
